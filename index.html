@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0d1015">
+  <meta name="color-scheme" content="dark">
+  <meta name="description" content="Remote start for the X3">
+  <title>X3 Remote</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icons/icon-192.png">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <link rel="stylesheet" href="app.css">
+</head>
+<body>
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <symbol id="i-power" viewBox="0 0 24 24"><path d="M7 6a7.75 7.75 0 1 0 10 0" /><path d="M12 4v8" /></symbol>
+    <symbol id="i-settings" viewBox="0 0 24 24"><path d="M10.3 4.3c.4-1.8 3-1.8 3.4 0a1.7 1.7 0 0 0 2.6 1.1c1.5-.9 3.3.8 2.4 2.4a1.7 1.7 0 0 0 1 2.5c1.8.4 1.8 3 0 3.4a1.7 1.7 0 0 0-1 2.6c.9 1.5-.9 3.3-2.4 2.4a1.7 1.7 0 0 0-2.6 1c-.4 1.8-3 1.8-3.4 0a1.7 1.7 0 0 0-2.6-1c-1.5.9-3.3-.9-2.4-2.4a1.7 1.7 0 0 0-1-2.6c-1.8-.4-1.8-3 0-3.4a1.7 1.7 0 0 0 1-2.5c-.9-1.6.9-3.3 2.4-2.4 1 .6 2.3.1 2.6-1.1z" /><circle cx="12" cy="12" r="3" /></symbol>
+    <symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12" /></symbol>
+    <symbol id="i-stop" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2" /></symbol>
+  </svg>
+
+  <main id="app" class="app" hidden>
+    <header class="top">
+      <div>
+        <h1>X3</h1>
+        <p id="sub" class="muted">xDrive30i</p>
+      </div>
+      <div class="top-right">
+        <span id="chip" class="chip chip-wait"><span class="dot"></span><span id="chip-text">Connecting</span></span>
+        <button id="open-settings" class="icon-btn" aria-label="Settings"><svg><use href="#i-settings" /></svg></button>
+      </div>
+    </header>
+
+    <section class="metrics" aria-label="Car status">
+      <div class="metric"><p class="label">Outside</p><p id="m-temp" class="value">—</p></div>
+      <div class="metric"><p class="label">Battery</p><p id="m-batt" class="value">—</p></div>
+      <div class="metric"><p class="label">Signal</p><p id="m-signal" class="value">—</p></div>
+    </section>
+
+    <section id="parked" class="hero">
+      <button id="hold-start" class="hold" aria-describedby="hold-start-text">
+        <svg class="ring" viewBox="0 0 200 200" aria-hidden="true">
+          <circle class="track" cx="100" cy="100" r="92" />
+          <circle class="prog" cx="100" cy="100" r="92" />
+        </svg>
+        <span class="hold-face">
+          <svg class="hold-icon"><use href="#i-power" /></svg>
+          <span id="hold-start-text" class="hold-text">Hold to start</span>
+        </span>
+      </button>
+      <div class="runtime">
+        <p class="label">Run time</p>
+        <div id="runtime" class="seg" role="radiogroup" aria-label="Run time">
+          <button role="radio" data-min="10">10 min</button>
+          <button role="radio" data-min="15">15 min</button>
+          <button role="radio" data-min="20">20 min</button>
+        </div>
+      </div>
+    </section>
+
+    <section id="running" class="hero" hidden>
+      <div class="countdown">
+        <svg class="ring" viewBox="0 0 220 220" aria-hidden="true">
+          <circle class="track" cx="110" cy="110" r="100" />
+          <circle id="cd-prog" class="prog run" cx="110" cy="110" r="100" />
+        </svg>
+        <div class="cd-face">
+          <span id="cd-time" class="cd-time">--:--</span>
+          <span id="cd-sub" class="muted small">left</span>
+        </div>
+      </div>
+      <div class="metrics two">
+        <div class="metric"><p class="label">Engine</p><p id="m-rpm" class="value">—</p></div>
+        <div class="metric"><p class="label">Coolant</p><p id="m-coolant" class="value">—</p></div>
+      </div>
+      <button id="hold-stop" class="hold-bar">
+        <span id="stop-fill" class="fill"></span>
+        <span class="bar-text"><svg class="bar-icon"><use href="#i-stop" /></svg><span id="hold-stop-text">Hold to stop engine</span></span>
+      </button>
+    </section>
+
+    <section class="activity" aria-label="Activity">
+      <div class="activity-head"><h2>Activity</h2><button id="refresh" class="link-btn">Refresh</button></div>
+      <ol id="log" class="log"></ol>
+      <p id="log-empty" class="muted small">Messages from the car show up here.</p>
+    </section>
+
+    <p id="toast" class="toast" role="status" aria-live="polite"></p>
+  </main>
+
+  <main id="setup" class="app setup" hidden>
+    <div class="setup-head">
+      <div class="logo"><svg><use href="#i-power" /></svg></div>
+      <h1>Connect your X3</h1>
+      <p class="muted">Sign in to your car's private server. Your login stays on this phone.</p>
+    </div>
+    <form id="setup-form" class="form" novalidate>
+      <label>Server address<input id="f-host" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="abcd1234.ala.us-east-1.emqxsl.com"></label>
+      <label>Username<input id="f-user" autocomplete="username" autocapitalize="off" spellcheck="false" placeholder="x3-phone"></label>
+      <label>Password<input id="f-pass" type="password" autocomplete="current-password"></label>
+      <p id="setup-error" class="error" role="alert"></p>
+      <button class="primary" type="submit">Connect</button>
+      <button id="try-demo" class="ghost" type="button">Look around in demo mode</button>
+    </form>
+  </main>
+
+  <dialog id="settings" class="sheet" aria-labelledby="settings-title">
+    <form method="dialog" class="sheet-body" id="settings-form" novalidate>
+      <div class="sheet-head">
+        <h2 id="settings-title">Settings</h2>
+        <button class="icon-btn" value="close" aria-label="Close"><svg><use href="#i-x" /></svg></button>
+      </div>
+      <label>Server address<input id="s-host" autocomplete="off" autocapitalize="off" spellcheck="false"></label>
+      <label>Username<input id="s-user" autocomplete="username" autocapitalize="off" spellcheck="false"></label>
+      <label>Password<input id="s-pass" type="password" autocomplete="current-password" placeholder="Unchanged"></label>
+      <div class="row2">
+        <label>Latitude<input id="s-lat" inputmode="decimal"></label>
+        <label>Longitude<input id="s-lon" inputmode="decimal"></label>
+      </div>
+      <p class="muted small">The outside temperature for this spot is sent with each start, so the car can allow for the cold.</p>
+      <label class="switch"><input id="s-demo" type="checkbox"><span>Demo mode (no car, made-up numbers)</span></label>
+      <p id="settings-error" class="error" role="alert"></p>
+      <button id="s-save" class="primary" value="save">Save</button>
+      <button id="s-forget" class="ghost danger" type="button">Sign out of this phone</button>
+      <p id="version" class="muted small center"></p>
+    </form>
+  </dialog>
+
+  <script src="vendor/mqtt.min.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
