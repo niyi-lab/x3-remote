@@ -2,7 +2,7 @@
    private server. The login lives only in this phone's storage; nothing secret is in this code. */
 "use strict";
 
-const VERSION = "1.0.0";
+const VERSION = "1.0.1";
 const HOLD_START_MS = 1500;
 const HOLD_STOP_MS = 1000;
 const REPLY_TIMEOUT_MS = 20000;
@@ -13,6 +13,8 @@ const $ = (s) => document.querySelector(s);
 const store = {
   get(k, d) { try { const v = localStorage.getItem("x3." + k); return v === null ? d : JSON.parse(v); } catch { return d; } },
   set(k, v) { try { localStorage.setItem("x3." + k, JSON.stringify(v)); } catch { /* private mode: keep in memory */ } },
+  // Ask Chrome to keep this site's storage even when the phone runs low on space, so the login sticks.
+  persist() { if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {}); },
   del(k) { try { localStorage.removeItem("x3." + k); } catch { /* ignore */ } },
 };
 
@@ -319,7 +321,7 @@ function submitSetup(e) {
   if (!host || !user || !pass) { err.textContent = "Fill in all three fields."; return; }
   err.textContent = "";
   Object.assign(cfg, { host, user, pass, demo: false });
-  store.set("cfg", cfg);
+  store.set("cfg", cfg); store.persist();
   show("app"); render(); loadWeather(); connect();
 }
 
@@ -354,7 +356,7 @@ function init() {
 
   state.wasDemo = cfg.demo;
   renderLog();
-  if (cfg.demo || (cfg.host && cfg.user && cfg.pass)) { show("app"); render(); connect(); }
+  if (cfg.demo || (cfg.host && cfg.user && cfg.pass)) { show("app"); render(); connect(); store.persist(); }
   else { fillSetup(); show("setup"); }
   loadWeather();
 
